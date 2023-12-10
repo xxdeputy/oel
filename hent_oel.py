@@ -9,6 +9,7 @@ import requests
 import pandas as pd
 import re
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 
 import urllib.request    
@@ -93,7 +94,8 @@ date_elements = soup.find_all(class_='date')
 # Extract the date values using BeautifulSoup
 dates = [element.get_text(strip=True) for element in date_elements]
 # Keep only elements containing 'Recent' in the list
-Date = [''.join(char for char in date if char.isdigit() or char == '/') for date in dates if 'Recent' in date]
+Dato = [''.join(char for char in date if char.isdigit() or char == '/') for date in dates if 'Recent' in date]
+Date = [datetime.strptime(date, '%m/%d/%y').date() for date in Dato]
 
 
 
