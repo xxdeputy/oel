@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Dec  9 19:59:11 2023
+
+@author: Mathias
+"""
 
 import requests
 import pandas as pd
@@ -28,6 +34,23 @@ names = [element.get_text(strip=True) for element in name_elements]
 brewery_elements = soup.find_all(class_='brewery')
 breweries = [element.get_text(strip=True) for element in brewery_elements]
 
+# Stil
+style_elements = soup.find_all(class_='style')
+styles = [element.get_text(strip=True) for element in style_elements]
+split_styles = [tuple(part.strip() for part in style.split("-")) for style in styles]
+
+Type_list = []
+Undertype_list = []
+
+# Split each element of 'styles' using "-" delimiter and assign to separate variables
+for style in styles:
+    parts = [part.strip() for part in style.split(" - ")]
+    Type = parts[0]
+    Undertype = parts[1] if len(parts) > 1 else ''  # Check if there is a second part
+    Type_list.append(Type)
+    Undertype_list.append(Undertype)
+
+
 # ABV
 abv_elements = soup.find_all(class_='abv')
 abv_values = [float(re.search(r'\d+\.\d+', element.get_text(strip=True)).group()) if re.search(r'\d+\.\d+', element.get_text(strip=True)) else 0 for element in abv_elements]
@@ -36,9 +59,13 @@ abv_values = [float(re.search(r'\d+\.\d+', element.get_text(strip=True)).group()
 ibu_elements = soup.find_all(class_='ibu')
 ibu_values = [float(re.search(r'\d+', element.get_text(strip=True)).group()) if re.search(r'\d+', element.get_text(strip=True)) else 0 for element in ibu_elements]
 
+# Date
+date_elements = soup.find_all(class_='date-time')
+date_values = [element.get_text(strip=True) for element in date_elements]
+unique_date_values = list(set(date_values))
 
 # Create a DataFrame with the names and breweries
-df = pd.DataFrame({'Øl': names, 'Bryggeri': breweries, 'ABV': abv_values, 'IBU': ibu_values})
+df = pd.DataFrame({'Øl': names, 'Bryggeri': breweries, 'Type': Type, 'ABV': abv_values, 'IBU': ibu_values, 'Dates': unique_date_values})
 
 # Display the DataFrame
 print(df)
