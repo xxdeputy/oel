@@ -15,8 +15,13 @@ import urllib.request
 urllib.request.urlretrieve("https://untappd.com/user/MathiasB91/beers", "untappd.html")
 
 
+# Lokal fil
+# html_file_path = "C:/Users/Mathias/Documents/Dokumenter/113 Brewing/untappd.html"
+
+
 # Your input string containing "alt=NAME" instances
 html_file_path = "C:/Users/Mathias/untappd.html"
+
 
 
 # Read the HTML content from the file
@@ -53,7 +58,16 @@ for style in styles:
 
 # ABV
 abv_elements = soup.find_all(class_='abv')
-abv_values = [float(re.search(r'\d+\.\d+', element.get_text(strip=True)).group()) if re.search(r'\d+\.\d+', element.get_text(strip=True)) else 0 for element in abv_elements]
+abv_values = []
+for element in abv_elements:
+    text = element.get_text(strip=True)
+    try:
+        abv_value = float(re.search(r'\d+(\.\d+)?', text).group())
+    except (ValueError, AttributeError):
+        print(f"Could not convert '{text}' to float.")
+        abv_value = 0
+    abv_values.append(abv_value)
+
 
 # IBU
 ibu_elements = soup.find_all(class_='ibu')
@@ -65,7 +79,7 @@ date_values = [element.get_text(strip=True) for element in date_elements]
 unique_date_values = list(set(date_values))
 
 # Create a DataFrame with the names and breweries
-df = pd.DataFrame({'Øl': names, 'Bryggeri': breweries, 'Type': Type, 'ABV': abv_values, 'IBU': ibu_values, 'Dates': unique_date_values})
+df = pd.DataFrame({'Øl': names, 'Bryggeri': breweries, 'Type': Type_list, 'Undertype': Undertype_list, 'ABV': abv_values, 'IBU': ibu_values})
 
 # Display the DataFrame
 print(df)
