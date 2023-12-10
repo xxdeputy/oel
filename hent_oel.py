@@ -93,12 +93,12 @@ date_elements = soup.find_all(class_='date')
 # Extract the date values using BeautifulSoup
 dates = [element.get_text(strip=True) for element in date_elements]
 # Keep only elements containing 'Recent' in the list
-Date_time = [''.join(char for char in date if char.isdigit() or char == '/') for date in dates if 'Recent' in date]
+Date = [''.join(char for char in date if char.isdigit() or char == '/') for date in dates if 'Recent' in date]
 
 
 
 # Create a DataFrame with the names and breweries
-df = pd.DataFrame({'Beer': names, 'Brewery': breweries, 'Type': Type_list, 'Subtype': Undertype_list, 'ABV': abv_values, 'IBU': ibu_values, 'My_Rating': My_Rating, 'Global_Rating': Global_Rating, 'Date_time':Date_time})
+df = pd.DataFrame({'Beer': names, 'Brewery': breweries, 'Type': Type_list, 'Subtype': Undertype_list, 'ABV': abv_values, 'IBU': ibu_values, 'My_Rating': My_Rating, 'Global_Rating': Global_Rating, 'Date_time':Date})
 
 # Display the DataFrame
 print(df)
