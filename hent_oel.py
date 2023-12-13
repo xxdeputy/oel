@@ -10,36 +10,35 @@ import pandas as pd
 import re
 from bs4 import BeautifulSoup
 from datetime import datetime
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+import urllib.request
 
-import urllib.request    
+
+
+#Hent html fra untappd
 urllib.request.urlretrieve("https://untappd.com/user/MathiasB91/beers", "untappd.html")
-
-
-# Lokal fil
-html_file_path = "C:/Users/Mathias/Documents/Dokumenter/113 Brewing/untappd.html"
-
-
 # Your input string containing "alt=NAME" instances
-#html_file_path = "C:/Users/Mathias/untappd.html"
+html_file_path = "C:/Users/Mathias/untappd.html"
 
 
 
-# Read the HTML content from the file
+# Læs html
 with open(html_file_path, 'r', encoding='utf-8') as file:
     html_content = file.read()
 
-# Parse the HTML content using BeautifulSoup
+# Parsing af html med BeautifulSoup
 soup = BeautifulSoup(html_content, 'html.parser')
 
-# Beer
+# Øl
 name_elements = soup.select('.name:not(.sidebar .name)')
 names = [element.get_text(strip=True) for element in name_elements]
 
-# Brewery
+# bryggeri
 brewery_elements = soup.find_all(class_='brewery')
 breweries = [element.get_text(strip=True) for element in brewery_elements]
 
-# Stil
+# Typer
 style_elements = soup.find_all(class_='style')
 styles = [element.get_text(strip=True) for element in style_elements]
 split_styles = [tuple(part.strip() for part in style.split("-")) for style in styles]
@@ -47,7 +46,7 @@ split_styles = [tuple(part.strip() for part in style.split("-")) for style in st
 Type_list = []
 Undertype_list = []
 
-# Split each element of 'styles' using "-" delimiter and assign to separate variables
+# Split typerne med "-" delimiter og gør dem til Type og Undertype
 for style in styles:
     parts = [part.strip() for part in style.split(" - ")]
     Type = parts[0]
@@ -91,11 +90,18 @@ Global_Rating = [float(rating) if rating else 0 for rating in global_rating1]
 # Find all elements with class 'date'
 date_elements = soup.find_all(class_='date')
 # Extract the date values using BeautifulSoup
-dates = [element.get_text(strip=True) for element in date_elements]
-# Keep only elements containing 'Recent' in the list
-Dato = [''.join(char for char in date if char.isdigit() or char == '/') for date in dates if 'Recent' in date]
-Date = [datetime.strptime(date, '%m/%d/%y').date() for date in Dato]
+Date_3 = [element.get_text(strip=True) for element in date_elements]
+# Keep only elements containing 'First' in the list
+Date_2 = [date for date in Date_3 if 'First' in date]
+
+# Remove the "First:" prefix and parse the dates using RFC 2822 format
+Dato = [datetime.strptime(date.split(':', 1)[1].strip(), '%a, %d %b %Y %H:%M:%S %z').strftime('%d/%m/%Y') for date in Date_2]
 
 # Create a DataFrame with the names and breweries
-df = pd.DataFrame({'Beer': names, 'Brewery': breweries, 'Type': Type_list, 'Subtype': Undertype_list, 'ABV': abv_values, 'IBU': ibu_values, 'My_Rating': My_Rating, 'Global_Rating': Global_Rating, 'Date_time':Date})
+df = pd.DataFrame({'Øl':names,'Bryggeri':breweries,'Type':Type_list,'Undertype':Undertype_list,'ABV':abv_values,'IBU':ibu_values,'Rating':My_Rating,'Global_Rating':Global_Rating, 'Dato':Dato})
 
+bryggeri_database_url = 'https://docs.google.com/spreadsheets/d/14TmhiRc0cZJooEfcv_cJzLxkXVaBhF62AvZauVgLfic/edit#gid=1346854859'
+csv_export_url = bryggeri_database_url.replace('/edit#gid=', '/export?format=csv&gid=')
+bryggeri_database = pd.read_csv(csv_export_url)
+
+Samlet = pd.merge(left=df, right=bryggeri_database, how='left')
